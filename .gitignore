@@ -4,3 +4,28 @@
 *.metals
 # virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
 hs_err_pid*
+
+# sbt build files
+target/
+project/target/
+project/project/
+project/
+
+# sbt caches and logs
+dist/
+lib_managed/
+src_managed/
+.cache/
+.history/
+
+# IntelliJ / VSCode project files (optional)
+*.iml
+.idea/
+.vscode/
+
+# Simulation output
+test_run_dir/
+
+# OS-specific files
+.DS_Store
+Thumbs.db
