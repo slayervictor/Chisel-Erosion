@@ -35,6 +35,11 @@ class CPUTop extends Module {
   //Continue here with your connections
   ////////////////////////////////////////////
 
+  ////////////////////////////////////////////
+  // TODO!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  ////////////////////////////////////////////
+  // BEQ, BNE, BEQZ, BLT
+
   //This signals are used by the tester for loading the program to the program memory, do not touch
   programMemory.io.testerAddress := io.testerProgMemAddress
   io.testerProgMemDataRead := programMemory.io.testerDataRead
