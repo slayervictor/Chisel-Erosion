@@ -35,6 +35,22 @@ class CPUTop extends Module {
   //Continue here with your connections
   ////////////////////////////////////////////
 
+
+
+  val instruction = Wire(UInt(32.W))
+
+  val pc = programCounter.io.programCounter
+  val opcode = instruction(6, 0)      
+  val rd     = instruction(11, 7)     
+  val funct3 = instruction(14, 12)    
+  val rs1    = instruction(19, 15)    
+  val rs2    = instruction(24, 20)    
+  val funct7 = instruction(31, 25)    
+
+  // check if it's immediate, not really used just here for cmpleteness
+  val immI = instruction(31, 20)      
+  val immS = Cat(instruction(31, 25), instruction(11, 7))  
+
   ////////////////////////////////////////////
   // TODO!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   ////////////////////////////////////////////
@@ -52,4 +68,5 @@ class CPUTop extends Module {
   dataMemory.io.testerDataWrite := io.testerDataMemDataWrite
   dataMemory.io.testerEnable := io.testerDataMemEnable
   dataMemory.io.testerWriteEnable := io.testerDataMemWriteEnable
+
 }
