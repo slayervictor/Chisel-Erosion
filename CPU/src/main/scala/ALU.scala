@@ -65,7 +65,6 @@ class ALU extends Module {
     when(funct7 === "h1".U) {
       io.result := io.operandA * io.operandB
     }
-    }
   }
 
 }
