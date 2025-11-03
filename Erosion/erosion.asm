@@ -1,7 +1,3 @@
-.data
-    in_image: .word 0x400     # 20x20 words (each pixel = 1 word)
-    out_image: .word 1600
-
 .text
 main:
     li t0, 0           # x = 0
@@ -14,11 +10,8 @@ outer_loop:
 inner_loop:
     # Compute address in_image[x][y]
     mul t2, t0, s0     # t2 = x * 20
-    add t2, t2, t1     # t2 = x*20 + y
-    slli t2, t2, 2     # *4 (word offset)
-    la t3, in_image
-    add t3, t3, t2
-    lw t4, 0(t3)       # t4 = in_image[x][y]
+    add t2, t2, t1     # t2 = x*20 + y (address 0-399)
+    lw t4, 0(t2)       # t4 = in_image[x][y]
 
     # Border check
     beq t0, x0, darken
@@ -33,61 +26,45 @@ inner_loop:
     # in_image[x-1][y]
     addi s2, t0, -1
     mul t2, s2, s0
-    add t2, t2, t1
-    slli t2, t2, 2
-    la t3, in_image
-    add t3, t3, t2
-    lw t5, 0(t3)
+    add t2, t2, t1     # address = (x-1)*20 + y
+    lw t5, 0(t2)
     beqz t5, darken
 
     # in_image[x+1][y]
     addi s2, t0, 1
     mul t2, s2, s0
-    add t2, t2, t1
-    slli t2, t2, 2
-    la t3, in_image
-    add t3, t3, t2
-    lw t5, 0(t3)
+    add t2, t2, t1     # address = (x+1)*20 + y
+    lw t5, 0(t2)
     beqz t5, darken
 
     # in_image[x][y-1]
     mul t2, t0, s0
     addi s2, t1, -1
-    add t2, t2, s2
-    slli t2, t2, 2
-    la t3, in_image
-    add t3, t3, t2
-    lw t5, 0(t3)
+    add t2, t2, s2     # address = x*20 + (y-1)
+    lw t5, 0(t2)
     beqz t5, darken
 
     # in_image[x][y+1]
     mul t2, t0, s0
     addi s2, t1, 1
-    add t2, t2, s2
-    slli t2, t2, 2
-    la t3, in_image
-    add t3, t3, t2
-    lw t5, 0(t3)
+    add t2, t2, s2     # address = x*20 + (y+1)
+    lw t5, 0(t2)
     beqz t5, darken
 
     # None were black → do not erode
-    la t3, out_image
     mul t2, t0, s0
     add t2, t2, t1
-    slli t2, t2, 2
-    add t3, t3, t2
+    addi t2, t2, 400   # output address = (x*20 + y) + 400
     li t5, 255
-    sw t5, 0(t3)
+    sw t5, 0(t2)
     j after_pixel
 
 darken:
     # out_image[x][y] = 0
-    la t3, out_image
     mul t2, t0, s0
     add t2, t2, t1
-    slli t2, t2, 2
-    add t3, t3, t2
-    sw x0, 0(t3)
+    addi t2, t2, 400   # output address = (x*20 + y) + 400
+    sw x0, 0(t2)
 
 skip_white_check:
 
