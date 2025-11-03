@@ -3,12 +3,11 @@ import chisel3.util._
 
 class ALU extends Module {
   val io = IO(new Bundle {
-    val operandA = Input(UInt(32.W))
-    val operandB = Input(UInt(32.W))
+    val operandA   = Input(UInt(32.W))
+    val operandB   = Input(UInt(32.W))
     val aluControl = Input(UInt(4.W)) // { funct7[5], funct3[2:0] }
-    val result = Output(UInt(32.W))
+    val result     = Output(UInt(32.W))
   })
-
 
   // Extract control signals for readability
   val funct3 = io.aluControl(2, 0)
@@ -21,6 +20,8 @@ class ALU extends Module {
     is("h0".U) {
       when(funct7 === "h0".U) {
         io.result := io.operandA + io.operandB // ADD
+      }.elsewhen(funct7 === "h1".U) {
+        io.result := io.operandA * io.operandB // MUL
       }.otherwise {
         io.result := io.operandA - io.operandB // SUB
       }
@@ -58,12 +59,6 @@ class ALU extends Module {
     }
     is("h7".U) { // AND
       io.result := io.operandA & io.operandB
-    }
-  }
-
-  is("h0".U) {
-    when(funct7 === "h1".U) {
-      io.result := io.operandA * io.operandB
     }
   }
 
