@@ -3,16 +3,15 @@ import chisel3.util._
 
 class ControlUnit extends Module {
   val io = IO(new Bundle {
-    val opcode     = Input(UInt(7.W))
-    val funct3     = Input(UInt(3.W))
-    val funct7     = Input(UInt(7.W))
-    val aluControl = Output(UInt(4.W))
-    val aluSrc     = Output(Bool())
-    val regWrite   = Output(Bool())
-    val memRead    = Output(Bool())
-    val memWrite   = Output(Bool())
-    val memToReg   = Output(Bool())
-    val branch     = Output(Bool())
+    val opcode   = Input(UInt(7.W))
+    val funct3   = Input(UInt(3.W))
+    val funct7   = Input(UInt(7.W))
+    val aluSrc   = Output(Bool())
+    val regWrite = Output(Bool())
+    val memRead  = Output(Bool())
+    val memWrite = Output(Bool())
+    val memToReg = Output(Bool())
+    val branch   = Output(Bool())
   })
 
   // Default values
@@ -35,50 +34,46 @@ class ControlUnit extends Module {
 
   switch(io.opcode) {
     is(R_TYPE) {
-      io.regWrite   := true.B
-      io.aluSrc     := false.B
-      io.aluControl := Cat(io.funct7(5), io.funct3)
+      io.regWrite := true.B
+      io.aluSrc   := false.B
+      io.funct3   := io.funct3
+      io.funt7    := io.funct7(5)
     }
 
     is(I_TYPE) {
-      io.regWrite   := true.B
-      io.aluSrc     := true.B
-      io.aluControl := Cat(0.U(1.W), io.funct3)
+      io.regWrite := true.B
+      io.aluSrc   := true.B
+      io.funct3   := io.funct3
     }
 
     is(LOAD) {
-      io.regWrite   := true.B
-      io.aluSrc     := true.B
-      io.memRead    := true.B
-      io.memToReg   := true.B
-      io.aluControl := "b0000".U
+      io.regWrite := true.B
+      io.aluSrc   := true.B
+      io.memRead  := true.B
+      io.memToReg := true.B
     }
 
     is(STORE) {
-      io.aluSrc     := true.B
-      io.memWrite   := true.B
-      io.aluControl := "b0000".U
+      io.aluSrc   := true.B
+      io.memWrite := true.B
     }
 
     is(BRANCH) {
-      io.branch     := true.B
-      io.aluControl := "b0001".U
+      io.branch := true.B
     }
 
     is(ECALL) {
       when(io.funct3 === "h0".U && io.funct7 === "h0".U) {
-        io.regWrite   := false.B
-        io.memRead    := false.B
-        io.memWrite   := false.B
-        io.branch     := false.B
-        io.aluControl := "b0000".U
+        io.regWrite := false.B
+        io.memRead  := false.B
+        io.memWrite := false.B
+        io.branch   := false.B
       }
     }
 
     is(JAL) {
-      io.regWrite   := true.B // JAL writes return address to rd
-      io.aluSrc     := false.B
-      io.aluControl := "b0000".U
+      io.regWrite := true.B // JAL writes return address to rd
+      io.aluSrc   := false.B
     }
 
   }
