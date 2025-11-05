@@ -1,0 +1,8 @@
+[instruction_set]
+version = "riscv"
+
+[compiler]
+cmd = "riscv64-linux-gnu-gcc"
+
+[opts]
+diagnostics = true
