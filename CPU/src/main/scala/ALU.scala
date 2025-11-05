@@ -5,7 +5,7 @@ class ALU extends Module {
   val io = IO(new Bundle {
     val operandA = Input(UInt(32.W))
     val operandB = Input(UInt(32.W))
-    val funct7   = Input(UInt(4.W))
+    val funct7   = Input(UInt(7.W))
     val funct3   = Input(UInt(3.W))
     val result   = Output(UInt(32.W))
   })
@@ -34,14 +34,6 @@ class ALU extends Module {
 
     is("h1".U) { // SLL (Shift Left Logical)
       io.result := io.operandA << io.operandB(4, 0) // Only lower 5 bits
-    }
-
-    is("h2".U) { // SLT (Set Less Than Signed)
-      io.result := Mux(io.operandA.asSInt < io.operandB.asSInt, 1.U, 0.U)
-    }
-
-    is("h3".U) { // SLTU (Set Less Than Unsigned)
-      io.result := Mux(io.operandA < io.operandB, 1.U, 0.U)
     }
 
     is("h5".U) { // SRL or SRA (Shift Right)

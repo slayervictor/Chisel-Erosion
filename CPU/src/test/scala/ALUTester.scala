@@ -107,28 +107,4 @@ class ALUTester extends AnyFlatSpec with ChiselScalatestTester {
       dut.io.result.expect("hFF000000".U)
     }
   }
-
-  it should "perform SLT" in {
-    test(new ALU) { dut =>
-      // SLT signed
-      dut.io.operandA.poke((-5).S.asUInt)
-      dut.io.operandB.poke(3.U)
-      dut.io.funct3.poke("h02".U)
-      dut.io.funct7.poke("h00".U)
-      dut.clock.step()
-      dut.io.result.expect(1.U)
-    }
-  }
-
-  it should "perform SLTU" in {
-    test(new ALU) { dut =>
-      // SLTU unsigned
-      dut.io.operandA.poke("hFFFFFFFF".U)
-      dut.io.operandB.poke(1.U)
-      dut.io.funct3.poke("h03".U)
-      dut.io.funct7.poke("h00".U)
-      dut.clock.step()
-      dut.io.result.expect(0.U)
-    }
-  }
 }
