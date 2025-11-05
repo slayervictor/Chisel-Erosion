@@ -15,7 +15,6 @@ class ControlUnit extends Module {
   })
 
   // Default values
-  io.aluControl := 0.U
   io.aluSrc := false.B
   io.regWrite := false.B
   io.memRead := false.B
