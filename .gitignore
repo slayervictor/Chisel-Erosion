@@ -29,3 +29,5 @@ test_run_dir/
 # OS-specific files
 .DS_Store
 Thumbs.db
+
+CPU/.bloop/*
