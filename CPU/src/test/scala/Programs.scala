@@ -3,7 +3,7 @@ import chiseltest._
 import org.scalatest.flatspec.AnyFlatSpec
 import java.util
 
-object Programs{
+object Programs {
   val program1 = Array(
     "h00000000".U(32.W),
     "h00000000".U(32.W),
@@ -19,7 +19,7 @@ object Programs{
     "h00000000".U(32.W)
   )
 
-  val program2 = Array(
+  val erosion = Array(
     "b00000000000000000000001010010011".U(32.W),
     "b00000001010000000000010000010011".U(32.W),
     "b00000001001100000000010010010011".U(32.W),
@@ -68,5 +68,6 @@ object Programs{
     "b00000000000100101000001010010011".U(32.W),
     "b11110100100000101100101011100011".U(32.W),
     "b00000000101000000000010100010011".U(32.W),
-    "b00000000000000000000000001110011".U(32.W))
+    "b00000000000000000000000001110011".U(32.W)
+  )
 }
