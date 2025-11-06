@@ -75,7 +75,7 @@ class ALUTester extends AnyFlatSpec with ChiselScalatestTester {
     }
   }
 
-  it should "perform SLL correctly" in {
+  it should "perform SLL" in {
     test(new ALU) { dut =>
       dut.io.operandA.poke(0x00000001.U)
       dut.io.operandB.poke(4.U)
@@ -86,7 +86,7 @@ class ALUTester extends AnyFlatSpec with ChiselScalatestTester {
     }
   }
 
-  it should "perform SRL correctly" in {
+  it should "perform SRL" in {
     test(new ALU) { dut =>
       dut.io.operandA.poke(0x00000010.U)
       dut.io.operandB.poke(4.U)
@@ -97,7 +97,7 @@ class ALUTester extends AnyFlatSpec with ChiselScalatestTester {
     }
   }
 
-  it should "perform SRA correctly" in {
+  it should "perform SRA" in {
     test(new ALU) { dut =>
       dut.io.operandA.poke("hF0000000".U)
       dut.io.operandB.poke(4.U)
