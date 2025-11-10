@@ -46,9 +46,9 @@ class CPUTop extends Module {
   val rs2 = instruction(24, 20)
   val funct7 = instruction(31, 25)
 
-  // check if it's immediate, not really used just here for cmpleteness
-  val immI = Cat(Fill(20, instruction(31)), instruction(31, 20))
-  val immS = Cat(instruction(31, 25), instruction(11, 7))
+  // Immediate formats
+  val immI = Cat(Fill(20, instruction(31)), instruction(31, 20))  // I-type: ADDI, LW, etc.
+  val immS = Cat(Fill(20, instruction(31)), instruction(31, 25), instruction(11, 7))  // S-type: SW, etc.
 
   controlUnit.io.opcode := opcode
   controlUnit.io.funct3 := funct3
@@ -57,8 +57,14 @@ class CPUTop extends Module {
   registerFile.io.aSel := rs1
   registerFile.io.bSel := rs2
 
+  // Detect STORE instruction to use correct immediate format
+  val isStore = (opcode === "b0100011".U)
+
   alu.io.operandA := registerFile.io.a
-  alu.io.operandB := Mux(controlUnit.io.aluSrc, immI, registerFile.io.b)
+  alu.io.operandB := Mux(controlUnit.io.aluSrc,
+    Mux(isStore, immS, immI),  // Use immS for STORE, immI for I-type
+    registerFile.io.b
+  )
   alu.io.funct7 := controlUnit.io.funct7
   alu.io.funct3 := controlUnit.io.funct3
 
@@ -67,9 +73,16 @@ class CPUTop extends Module {
   dataMemory.io.dataWrite := registerFile.io.b
   dataMemory.io.writeEnable := controlUnit.io.memWrite
 
+  // Detect JAL instruction for write-back
+  val isJump = (opcode === "b1101111".U) // JAL/J opcode
+
   // Step 7: Write Back
-  val writeBackData =
+  val pcPlus4 = pc + 4.U
+  val writeBackData = Mux(
+    isJump,
+    pcPlus4,
     Mux(controlUnit.io.memToReg, dataMemory.io.dataRead, alu.io.result)
+  )
   registerFile.io.writeData := writeBackData
   registerFile.io.writeSel := rd
   registerFile.io.writeEnable := controlUnit.io.regWrite
@@ -120,8 +133,7 @@ class CPUTop extends Module {
       (isBNE && bneCond) ||
       (isBLT && bltCond)
 
-  // Determine if we should jump
-  val isJump = (opcode === "b1101111".U) // JAL/J opcode
+  // Determine if we should take the branch or jump
   val takeBranch = (controlUnit.io.branch && branchConditionMet) || isJump
 
   // Select target address (branch vs jump)
