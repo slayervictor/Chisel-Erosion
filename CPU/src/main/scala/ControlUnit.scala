@@ -3,68 +3,74 @@ import chisel3.util._
 
 class ControlUnit extends Module {
   val io = IO(new Bundle {
-    val opcode   = Input(UInt(7.W))
-    val funct3   = Input(UInt(3.W))
-    val funct7   = Input(UInt(7.W))
-    val aluSrc   = Output(Bool())
-    val regWrite = Output(Bool())
-    val memRead  = Output(Bool())
-    val memWrite = Output(Bool())
-    val memToReg = Output(Bool())
-    val branch   = Output(Bool())
+    val instruction = Input(UInt(32.W))
+    val opcode = Output(UInt(4.W))
+    val regA = Output(UInt(4.W))
+    val regB = Output(UInt(4.W))
+    val regC = Output(UInt(4.W))
+    val imm = Output(UInt(16.W))
+    val li = Output(Bool())
+    val lb = Output(Bool())
+    val sb = Output(Bool())
+    val branch = Output(Bool())
+    val add = Output(Bool())
+    val addi = Output(Bool())
+    val j = Output(Bool())
+    val exit = Output(Bool())
   })
 
-  // default outputs
-  io.aluSrc   := false.B
-  io.regWrite := false.B
-  io.memRead  := false.B
-  io.memWrite := false.B
-  io.memToReg := false.B
-  io.branch   := false.B
+  val opcode = io.instruction(3, 0)
+  val regA = io.instruction(7, 4)
+  val regB = io.instruction(11, 8)
+  val regC = io.instruction(15, 12)
+  val imm = io.instruction(31, 16)
 
-  // local aliases (read-only)
-  val opcode = io.opcode
-  val funct3 = io.funct3
-  val funct7 = io.funct7
-
-  // opcodes
-  val R_TYPE = "b0110011".U
-  val I_TYPE = "b0010011".U
-  val LOAD   = "b0000011".U
-  val STORE  = "b0100011".U
-  val BRANCH = "b1100011".U
-  val JAL    = "b1101111".U
-  val ECALL  = "b1110011".U
+  io.opcode := opcode
+  io.regA := regA
+  io.regB := regB
+  io.regC := regC
+  io.imm := imm
+  io.add := false.B
+  io.addi := false.B
+  io.li := false.B
+  io.lb := false.B
+  io.sb := false.B
+  io.branch := false.B
+  io.j := false.B
+  io.exit := false.B
 
   switch(opcode) {
-    is(R_TYPE) {
-      io.regWrite := true.B
-      io.aluSrc   := false.B
-      // funct3/funct7 are available via io.funct3 / io.funct7 for downstream units
+    // Load immediate
+    is("b0011".U) {
+      io.li := true.B
     }
-    is(I_TYPE) {
-      io.regWrite := true.B
-      io.aluSrc   := true.B
+    // Load byte
+    is("b0100".U) {
+      io.lb := true.B
     }
-    is(LOAD) {
-      io.regWrite := true.B
-      io.aluSrc   := true.B
-      io.memRead  := true.B
-      io.memToReg := true.B
+    // Save byte
+    is("b0101".U) {
+      io.sb := true.B
     }
-    is(STORE) {
-      io.aluSrc   := true.B
-      io.memWrite := true.B
-    }
-    is(BRANCH) {
+    // If equals zero, branch
+    is("b0110".U) {
       io.branch := true.B
     }
-    is(JAL) {
-      io.regWrite := true.B // write return address to rd
-      io.aluSrc   := false.B
+    // Add
+    is("b0001".U) {
+      io.add := true.B
     }
-    is(ECALL) {
-      // leave defaults (all false). If you need a special signal for ecall, add it in IO.
+    // Add Immediate
+    is("b0010".U) {
+      io.addi := true.B
+    }
+    // Jump
+    is("b0111".U) {
+      io.j := true.B
+    }
+    // Exit
+    is("b1000".U) {
+      io.exit := true.B
     }
   }
 }
