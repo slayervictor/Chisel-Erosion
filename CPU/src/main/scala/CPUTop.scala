@@ -58,26 +58,74 @@ class CPUTop extends Module {
   registerFile.io.writeEnable := false.B
 
   // INSTRUCTIONS
-  when(controlUnit.io.add) {
-    alu.io.func := false.B
-    registerFile.io.aSel := controlUnit.io.reg2
-    registerFile.io.bSel := controlUnit.io.reg3
-    alu.io.aSel := registerFile.io.aSel
-    alu.io.bSel := registerFile.io.bSel
-
-    registerFile.io.writeEnable := true.B
-    registerFile.io.writeSel := controlUnit.io.reg1
-    registerFile.io.writeData := alu.io.result
+  when(controlUnit.io.nop) {
+    // nothing happens
   }
+    .elsewhen(controlUnit.io.add) {
+      alu.io.func := false.B
+      registerFile.io.aSel := controlUnit.io.reg2
+      registerFile.io.bSel := controlUnit.io.reg3
+      alu.io.aSel := registerFile.io.aSel
+      alu.io.bSel := registerFile.io.bSel
+      registerFile.io.writeEnable := true.B
+      registerFile.io.writeSel := controlUnit.io.reg1
+      registerFile.io.writeData := alu.io.result
+    }
+    .elsewhen(controlUnit.io.addi) {
+      alu.io.func := false.B
+      registerFile.io.aSel := controlUnit.io.reg2
+      alu.io.aSel := registerFile.io.aSel
+      alu.io.bSel := controlUnit.io.imm
+
+      registerFile.io.writeEnable := true.B
+      registerFile.io.writeSel := controlUnit.io.reg1
+      registerFile.io.writeData := alu.io.result
+    }
+    .elsewhen(controlUnit.io.lb) {
+      alu.io.func := false.B
+      registerFile.io.aSel := controlUnit.io.reg2
+      alu.io.aSel := registerFile.io.aSel
+      alu.io.bSel := controlUnit.io.imm
+
+      dataMemory.io.address := alu.io.results
+      registerFile.io.writeEnable := true.B
+      registerFile.io.writeSel := controlUnit.io.reg1
+      registerFile.io.writeData := dataMemory.io.dataRead
+    }
+    .elsewhen(controlUnit.io.sb) {
+      alu.io.func := false.B
+      registerFile.io.aSel := controlUnit.io.reg2
+
+      alu.io.aSel := registerFile.io.aSel
+      alu.io.bSEl := controlUnit.io.imm
+
+      dataMemory.io.writeEnable := true.B
+      dataMemory.io.address := alu.io.results
+
+      registerFile.io.bSel := controlUnit.io.reg1
+      dataMemory.io.dataWrite := registerFile.io.bSel
+    }
     .elsewhen(controlUnit.io.li) {
       registerFile.io.writeEnable := true.B
       registerFile.io.writeSel := controlUnit.io.reg1
       registerFile.io.writeData := controlUnit.io.imm
     }
     .elsewhen(controlUnit.io.branch) {
+      when(alu.io.result === 1.U) {
+        programCounter.io.jump := true.B
+        programCounter.io.programCounterJump := controlUnit.io.imm
+      }
       alu.io.func := true.B
       registerFile.io.aSel := controlUnit.io.reg1
       alu.io.aSel := registerFile.io.aSel
+    }
+    .elsewhen(controlUnit.io.j) {
+      programCounter.io.j := true.B
+      programCounter.io.programCounterJump := controlUnit.io.imm
+    }
+    .elsewhen(controlUnit.io.exit) {
+      io.done := true.B
+      programCounter.io.stop := true.B
     }
 
   // This signals are used by the tester for loading the program to the program memory, do not touch
