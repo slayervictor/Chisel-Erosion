@@ -3,52 +3,9 @@ import chisel3.util._
 
 class ALU extends Module {
   val io = IO(new Bundle {
-    val operandA = Input(UInt(32.W))
-    val operandB = Input(UInt(32.W))
-    val funct7   = Input(UInt(7.W))
-    val funct3   = Input(UInt(3.W))
-    val result   = Output(UInt(32.W))
+    // Define the module interface here (inputs/outputs)
   })
 
-  // Default value
-  io.result := 0.U
-
-  switch(io.funct3) {
-    is("h0".U) {
-      when(io.funct7 === "h0".U) {
-        io.result := io.operandA + io.operandB // ADD
-      }.elsewhen(io.funct7 === "h1".U) {
-        io.result := io.operandA * io.operandB // MUL
-      }.otherwise {
-        io.result := io.operandA - io.operandB // SUB
-      }
-    }
-
-    is("h4".U) { // XOR
-      io.result := io.operandA ^ io.operandB
-    }
-
-    is("h6".U) { // OR
-      io.result := io.operandA | io.operandB
-    }
-
-    is("h1".U) { // SLL (Shift Left Logical)
-      io.result := io.operandA << io.operandB(4, 0) // Only lower 5 bits
-    }
-
-    is("h5".U) { // SRL or SRA (Shift Right)
-      when(io.funct7 === "h0".U) {
-        io.result := io.operandA >> io.operandB(4, 0) // SRL (Logical)
-      }.otherwise {
-        io.result := (io.operandA.asSInt >> io.operandB(
-          4,
-          0
-        )).asUInt // SRA (Arithmetic)
-      }
-    }
-    is("h7".U) { // AND
-      io.result := io.operandA & io.operandB
-    }
-  }
+  // Implement this module here
 
 }
