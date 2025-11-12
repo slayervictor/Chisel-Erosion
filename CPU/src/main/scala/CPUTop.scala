@@ -76,8 +76,8 @@ class CPUTop extends Module {
     }
     .elsewhen(controlUit.io.branch) {
       alu.io.func := true.B
-      registerFile.io.aSel := controlUnit.io.regA
-      alu.io.aSel := registerFile.io.a
+      registerFile.io.aSel := controlUnit.io.reg1
+      alu.io.aSel := registerFile.io.aSel
     }
 
   // This signals are used by the tester for loading the program to the program memory, do not touch
