@@ -1,6 +1,7 @@
 import chisel3._
 import chisel3.util._
 
+// ALU just needs to add and give the result as well as check if zero
 class ALU extends Module {
   val io = IO(new Bundle {
     val aSel = Input(Uint(16.W))
