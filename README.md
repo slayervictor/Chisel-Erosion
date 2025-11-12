@@ -4,7 +4,7 @@
 This is for assignment 2 of the course 'Computer Systems (02132)' at DTU. The cpu designed in this project is based of the RISC-V instruction set architecture.
 
 ## Erosion
-To run the Erosion algorithm, enter the CPU via `cd CPU` and run the CPUTopTester with the following command
+To run the Erosion algorithm, enter the CPU directory via `cd CPU` and run the CPUTopTester with the following command
 ```bash
 sbt "testOnly CPUTopTester"
 ```
