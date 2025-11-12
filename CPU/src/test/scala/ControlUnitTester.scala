@@ -13,7 +13,11 @@ class ControlUnitTester extends AnyFlatSpec with ChiselScalatestTester {
           reg3: Int,
           imm: Int
       ): BigInt = {
-        ((imm & 0xffff) << 16) | ((reg3 & 0xf) << 12) | ((reg2 & 0xf) << 8) | ((reg1 & 0xf) << 4) | (op & 0xf)
+        ((BigInt(imm & 0xffff) << 16) |
+          (BigInt(reg3 & 0xf) << 12) |
+          (BigInt(reg2 & 0xf) << 8) |
+          (BigInt(reg1 & 0xf) << 4) |
+          BigInt(op & 0xf))
       }
 
       def checkOutputs(
@@ -59,19 +63,15 @@ class ControlUnitTester extends AnyFlatSpec with ChiselScalatestTester {
       val reg3 = 3
       val imm = 0xabcd
 
-      // (opcode, expectedSignals)
       val tests = Seq(
-        (0x1, (false, false, false, false, true, false, false, false)), // ADD
-        (0x2, (false, false, false, false, false, true, false, false)), // ADDI
-        (0x3, (true, false, false, false, false, false, false, false)), // LI
-        (0x4, (false, true, false, false, false, false, false, false)), // LB
-        (0x5, (false, false, true, false, false, false, false, false)), // SB
-        (
-          0x6,
-          (false, false, false, true, false, false, false, false)
-        ), // BRANCH
-        (0x7, (false, false, false, false, false, false, true, false)), // JUMP
-        (0x8, (false, false, false, false, false, false, false, true)) // EXIT
+        (0x1, (false, false, false, false, true, false, false, false)),
+        (0x2, (false, false, false, false, false, true, false, false)),
+        (0x3, (true, false, false, false, false, false, false, false)),
+        (0x4, (false, true, false, false, false, false, false, false)),
+        (0x5, (false, false, true, false, false, false, false, false)),
+        (0x6, (false, false, false, true, false, false, false, false)),
+        (0x7, (false, false, false, false, false, false, true, false)),
+        (0x8, (false, false, false, false, false, false, false, true))
       )
 
       for ((opcode, signals) <- tests) {

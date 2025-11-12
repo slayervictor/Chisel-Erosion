@@ -74,7 +74,7 @@ class CPUTop extends Module {
       registerFile.io.writeSel := controlUnit.io.reg1
       registerFile.io.writeData := controlUnit.io.imm
     }
-    .elsewhen(controlUit.io.branch) {
+    .elsewhen(controlUnit.io.branch) {
       alu.io.func := true.B
       registerFile.io.aSel := controlUnit.io.reg1
       alu.io.aSel := registerFile.io.aSel
