@@ -6,39 +6,39 @@ class ControlUnit extends Module {
     val instruction = Input(UInt(32.W))
 
     val opcode = Output(UInt(4.W))
-    val regA = Output(UInt(4.W))
-    val regB = Output(UInt(4.W))
-    val regC = Output(UInt(4.W))
-    val imm = Output(UInt(16.W))
-    val li = Output(Bool())
-    val lb = Output(Bool())
-    val sb = Output(Bool())
+    val reg1   = Output(UInt(4.W))
+    val reg2   = Output(UInt(4.W))
+    val reg3   = Output(UInt(4.W))
+    val imm    = Output(UInt(16.W))
+    val li     = Output(Bool())
+    val lb     = Output(Bool())
+    val sb     = Output(Bool())
     val branch = Output(Bool())
-    val add = Output(Bool())
-    val addi = Output(Bool())
-    val j = Output(Bool())
-    val exit = Output(Bool())
+    val add    = Output(Bool())
+    val addi   = Output(Bool())
+    val j      = Output(Bool())
+    val exit   = Output(Bool())
   })
 
   val opcode = io.instruction(3, 0)
-  val regA = io.instruction(7, 4)
-  val regB = io.instruction(11, 8)
-  val regC = io.instruction(15, 12)
-  val imm = io.instruction(31, 16)
+  val regA   = io.instruction(7, 4)
+  val regB   = io.instruction(11, 8)
+  val regC   = io.instruction(15, 12)
+  val imm    = io.instruction(31, 16)
 
   io.opcode := opcode
-  io.regA := regA
-  io.regB := regB
-  io.regC := regC
-  io.imm := imm
-  io.add := false.B
-  io.addi := false.B
-  io.li := false.B
-  io.lb := false.B
-  io.sb := false.B
+  io.reg1   := regA
+  io.reg2   := regB
+  io.reg3   := regC
+  io.imm    := imm
+  io.add    := false.B
+  io.addi   := false.B
+  io.li     := false.B
+  io.lb     := false.B
+  io.sb     := false.B
   io.branch := false.B
-  io.j := false.B
-  io.exit := false.B
+  io.j      := false.B
+  io.exit   := false.B
 
   switch(opcode) {
     // Load immediate
