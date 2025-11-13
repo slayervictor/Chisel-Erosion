@@ -23,27 +23,24 @@ The Erosion program can be found in the `Erosion` directory, since the code is a
 The CPU Supports basic logical and arithmetic operations, but it is general purpose, so any software should run, assuming that the assembly is written with the limited scope in mind.
 
 ## Instruction Set
-| Decimal | Instruction | Description | Binary |
-|--------|-------------|-------------|--------|
-| 1 | ADD | R1 = R2 + R3 | b00001 |
-| 2 | SUB | R1 = R2 - R3 | b00010 |
-| 3 | MULT | R1 = R2 * R3 | b00011 |
-| 4 | ADDI | R1 = R2 + imm | b00100 |
-| 5 | SUBI | R1 = R2 - imm | b00101 |
-| 6 | OR | R1 = R2 OR R3 | b00110 |
-| 7 | AND | R1 = R2 AND R3 | b00111 |
-| 8 | NOT | R1 = NOT(R2) | b01000 |
-| 9 | - | Reserved | b01001 |
-| 10 | LI | R1 = imm | b01010 |
-| 11 | LD | R1 = memory[R2] | b01011 |
-| 12 | SD | memory[R2] = R1 | b01100 |
-| 13 | - | Reserved | b01101 |
-| 14 | JR | Jump to instruction | b01110 |
-| 15 | JEQ | Jump if R2 == R3 | b01111 |
-| 16 | JLT | Jump if R2 < R3 | b10000 |
-| 17 | JGT | Jump if R2 > R3 | b10001 |
-| 18 | NOP | No operation | b10010 |
-| 19 | END | Terminate execution | b10011 |
+| Opcode | Binary | Instruction | Description |
+|--------|--------|-------------|-------------|
+| 0 | 0000 | NOP | No operation |
+| 1 | 0001 | ADD | R1 = R2 + R3 |
+| 2 | 0010 | ADDI | R1 = R2 + imm |
+| 3 | 0011 | LI | R1 = imm (Load Immediate) |
+| 4 | 0100 | LB | R1 = memory[R2] (Load Byte) |
+| 5 | 0101 | SB | memory[R2] = R1 (Store Byte) |
+| 6 | 0110 | BRANCH | Branch if R2 == 0 |
+| 7 | 0111 | J | Jump to address in imm |
+| 8 | 1000 | EXIT | Terminate execution |
+| 9 | 1001 | MUL | R1 = R2 * R3 |
+| 10 | 1010 | OR | R1 = R2 OR R3 |
+| 11 | 1011 | AND | R1 = R2 AND R3 |
+| 12 | 1100 | NOT | R1 = NOT(R2) |
+| 13 | 1101 | JEQ | Jump if R2 == R3 |
+| 14 | 1110 | JLT | Jump if R2 < R3 |
+| 15 | 1111 | JGT | Jump if R2 > R3 |
 
 ## Authors
 - Victor Reynolds - [@slayervictor](https://github.com/slayervictor)
