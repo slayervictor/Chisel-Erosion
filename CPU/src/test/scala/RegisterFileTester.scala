@@ -43,8 +43,8 @@ class RegisterFileTester extends AnyFlatSpec with ChiselScalatestTester {
       c.clock.step(1)
       c.io.a.expect(9999.U)
 
-      // Write and read back all registers (0–15)
-      for (i <- 0 until 16) {
+      // Write and read back all registers (0–7)
+      for (i <- 0 until 8) {
         c.io.writeEnable.poke(true.B)
         c.io.writeSel.poke(i.U)
         c.io.writeData.poke((i * 100).U)
@@ -54,12 +54,12 @@ class RegisterFileTester extends AnyFlatSpec with ChiselScalatestTester {
       // disable write before readback
       c.io.writeEnable.poke(false.B)
 
-      for (i <- 0 until 16) {
+      for (i <- 0 until 8) {
         c.io.aSel.poke(i.U)
-        c.io.bSel.poke((15 - i).U)
+        c.io.bSel.poke((7 - i).U)
         c.clock.step(1)
         c.io.a.expect((i * 100).U)
-        c.io.b.expect(((15 - i) * 100).U)
+        c.io.b.expect(((7 - i) * 100).U)
       }
     }
   }

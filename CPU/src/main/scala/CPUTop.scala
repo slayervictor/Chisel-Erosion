@@ -5,13 +5,14 @@ class CPUTop extends Module {
   val io = IO(new Bundle {
     val done = Output(Bool())
     val run = Input(Bool())
-    // This signals are used by the tester for loading and dumping the memory content, do not touch
+
+    // Tester memory interfaces (do not touch)
     val testerDataMemEnable = Input(Bool())
     val testerDataMemAddress = Input(UInt(16.W))
     val testerDataMemDataRead = Output(UInt(32.W))
     val testerDataMemWriteEnable = Input(Bool())
     val testerDataMemDataWrite = Input(UInt(32.W))
-    // This signals are used by the tester for loading and dumping the memory content, do not touch
+
     val testerProgMemEnable = Input(Bool())
     val testerProgMemAddress = Input(UInt(16.W))
     val testerProgMemDataRead = Output(UInt(32.W))
@@ -19,7 +20,7 @@ class CPUTop extends Module {
     val testerProgMemDataWrite = Input(UInt(32.W))
   })
 
-  // Creating components
+  // connecting components
   val programCounter = Module(new ProgramCounter())
   val dataMemory = Module(new DataMemory())
   val programMemory = Module(new ProgramMemory())
@@ -27,141 +28,149 @@ class CPUTop extends Module {
   val controlUnit = Module(new ControlUnit())
   val alu = Module(new ALU())
 
-  // Connecting the modules
+  // default
+  io.done := false.B
   programCounter.io.run := io.run
+  programCounter.io.jump := false.B
+  programCounter.io.stop := false.B
+  programCounter.io.programCounterJump := 0.U
+
+  // memory
   programMemory.io.address := programCounter.io.programCounter
+  controlUnit.io.instruction := programMemory.io.instructionRead
 
-  ////////////////////////////////////////////
-  // Continue here with your connections
-  ////////////////////////////////////////////
+  // alu
+  alu.io.aSel := 0.U
+  alu.io.bSel := 0.U
+  alu.io.func := 0.U
 
-  val instruction = Wire(UInt(32.W))
-  instruction := programMemory.io.instructionRead
+  // memory
+  dataMemory.io.address := 0.U
+  dataMemory.io.writeEnable := false.B
+  dataMemory.io.dataWrite := 0.U
 
-  val pc = programCounter.io.programCounter
-  val opcode = instruction(6, 0)
-  val rd = instruction(11, 7)
-  val funct3 = instruction(14, 12)
-  val rs1 = instruction(19, 15)
-  val rs2 = instruction(24, 20)
-  val funct7 = instruction(31, 25)
+  // register file
+  registerFile.io.aSel := 0.U
+  registerFile.io.bSel := 0.U
+  registerFile.io.writeData := 0.U
+  registerFile.io.writeSel := 0.U
+  registerFile.io.writeEnable := false.B
 
-  // Immediate formats
-  val immI = Cat(Fill(20, instruction(31)), instruction(31, 20))  // I-type: ADDI, LW, etc.
-  val immS = Cat(Fill(20, instruction(31)), instruction(31, 25), instruction(11, 7))  // S-type: SW, etc.
+  // instructions
+  when(controlUnit.io.nop) {
+    // Do nothing
 
-  controlUnit.io.opcode := opcode
-  controlUnit.io.funct3 := funct3
-  controlUnit.io.funct7 := funct7
+  }.elsewhen(controlUnit.io.add) {
+    alu.io.func := 0.U // add
+    registerFile.io.aSel := controlUnit.io.reg2
+    registerFile.io.bSel := controlUnit.io.reg3
+    alu.io.aSel := registerFile.io.a
+    alu.io.bSel := registerFile.io.b
+    registerFile.io.writeEnable := true.B
+    registerFile.io.writeSel := controlUnit.io.reg1
+    registerFile.io.writeData := alu.io.result
 
-  registerFile.io.aSel := rs1
-  registerFile.io.bSel := rs2
+  }.elsewhen(controlUnit.io.addi) {
+    alu.io.func := 0.U // add
+    registerFile.io.aSel := controlUnit.io.reg2
+    alu.io.aSel := registerFile.io.a
+    alu.io.bSel := controlUnit.io.imm
+    registerFile.io.writeEnable := true.B
+    registerFile.io.writeSel := controlUnit.io.reg1
+    registerFile.io.writeData := alu.io.result
 
-  // Detect STORE instruction to use correct immediate format
-  val isStore = (opcode === "b0100011".U)
+  }.elsewhen(controlUnit.io.mul) {
+    alu.io.func := 1.U // mult
+    registerFile.io.aSel := controlUnit.io.reg2
+    registerFile.io.bSel := controlUnit.io.reg3
+    alu.io.aSel := registerFile.io.a
+    alu.io.bSel := registerFile.io.b
+    registerFile.io.writeEnable := true.B
+    registerFile.io.writeSel := controlUnit.io.reg1
+    registerFile.io.writeData := alu.io.result
 
-  alu.io.operandA := registerFile.io.a
-  alu.io.operandB := Mux(controlUnit.io.aluSrc,
-    Mux(isStore, immS, immI),  // Use immS for STORE, immI for I-type
-    registerFile.io.b
-  )
-  alu.io.funct7 := controlUnit.io.funct7
-  alu.io.funct3 := controlUnit.io.funct3
+  }.elsewhen(controlUnit.io.or) {
+    alu.io.func := 2.U // or
+    registerFile.io.aSel := controlUnit.io.reg2
+    registerFile.io.bSel := controlUnit.io.reg3
+    alu.io.aSel := registerFile.io.a
+    alu.io.bSel := registerFile.io.b
+    registerFile.io.writeEnable := true.B
+    registerFile.io.writeSel := controlUnit.io.reg1
+    registerFile.io.writeData := alu.io.result
 
-  // Step 6: Memory Access
-  dataMemory.io.address := alu.io.result(15, 0)
-  dataMemory.io.dataWrite := registerFile.io.b
-  dataMemory.io.writeEnable := controlUnit.io.memWrite
+  }.elsewhen(controlUnit.io.and) {
+    alu.io.func := 3.U // and
+    registerFile.io.aSel := controlUnit.io.reg2
+    registerFile.io.bSel := controlUnit.io.reg3
+    alu.io.aSel := registerFile.io.a
+    alu.io.bSel := registerFile.io.b
+    registerFile.io.writeEnable := true.B
+    registerFile.io.writeSel := controlUnit.io.reg1
+    registerFile.io.writeData := alu.io.result
 
-  // Detect JAL instruction for write-back
-  val isJump = (opcode === "b1101111".U) // JAL/J opcode
+  }.elsewhen(controlUnit.io.not) {
+    alu.io.func := 4.U // not b
+    registerFile.io.bSel := controlUnit.io.reg2
+    alu.io.bSel := registerFile.io.b
+    alu.io.aSel := 0.U // not ignores a
+    registerFile.io.writeEnable := true.B
+    registerFile.io.writeSel := controlUnit.io.reg1
+    registerFile.io.writeData := alu.io.result
 
-  // Step 7: Write Back
-  val pcPlus4 = pc + 4.U
-  val writeBackData = Mux(
-    isJump,
-    pcPlus4,
-    Mux(controlUnit.io.memToReg, dataMemory.io.dataRead, alu.io.result)
-  )
-  registerFile.io.writeData := writeBackData
-  registerFile.io.writeSel := rd
-  registerFile.io.writeEnable := controlUnit.io.regWrite
+  }.elsewhen(controlUnit.io.lb) {
+    alu.io.func := 0.U // add (address = reg2 + imm)
+    registerFile.io.aSel := controlUnit.io.reg2
+    alu.io.aSel := registerFile.io.a
+    alu.io.bSel := controlUnit.io.imm
+    dataMemory.io.address := alu.io.result
+    registerFile.io.writeEnable := true.B
+    registerFile.io.writeSel := controlUnit.io.reg1
+    registerFile.io.writeData := dataMemory.io.dataRead
 
-  ////////////////////////////////////////////
-  // Branch Logic: BEQ, BNE, BEQZ, BLT, J
-  ////////////////////////////////////////////
+  }.elsewhen(controlUnit.io.sb) {
+    alu.io.func := 0.U // add (address = reg2 + imm)
+    registerFile.io.aSel := controlUnit.io.reg2
+    alu.io.aSel := registerFile.io.a
+    alu.io.bSel := controlUnit.io.imm
+    dataMemory.io.address := alu.io.result
+    dataMemory.io.writeEnable := true.B
+    registerFile.io.bSel := controlUnit.io.reg1
+    dataMemory.io.dataWrite := registerFile.io.b
 
-  // Branch offset calculation (B-type format for BEQ, BNE, BLT, BEQZ)
-  val branchOffset = Cat(
-    Fill(4, instruction(31)), // Sign extend (bits 31-13)
-    instruction(31), // bit 12
-    instruction(7), // bit 11
-    instruction(30, 25), // bits 10:5
-    instruction(11, 8), // bits 4:1
-    0.U(1.W) // bit 0 (always 0)
-  ).asSInt.asUInt
+  }.elsewhen(controlUnit.io.li) {
+    registerFile.io.writeEnable := true.B
+    registerFile.io.writeSel := controlUnit.io.reg1
+    registerFile.io.writeData := controlUnit.io.imm
 
-  // Jump offset calculation (J-type format for J/JAL)
-  val jumpOffset = Cat(
-    Fill(12, instruction(31)), // Sign extend
-    instruction(19, 12), // bits 19:12
-    instruction(20), // bit 11
-    instruction(30, 21), // bits 10:1
-    0.U(1.W) // bit 0 (always 0)
-  ).asSInt.asUInt
+  }.elsewhen(controlUnit.io.branch) {
+    alu.io.func := 5.U // isZero
+    registerFile.io.aSel := controlUnit.io.reg1
+    alu.io.aSel := registerFile.io.a
+    when(alu.io.result === 1.U) {
+      programCounter.io.jump := true.B
+      programCounter.io.programCounterJump := controlUnit.io.imm
+    }
 
-  // Calculate target addresses
-  val branchTarget = (pc.asSInt + branchOffset.asSInt).asUInt
-  val jumpTarget = (pc.asSInt + jumpOffset.asSInt).asUInt
+  }.elsewhen(controlUnit.io.j) {
+    programCounter.io.jump := true.B
+    programCounter.io.programCounterJump := controlUnit.io.imm
 
-  // Get register values for comparison
-  val regAData = registerFile.io.a
-  val regBData = registerFile.io.b
+  }.elsewhen(controlUnit.io.exit) {
+    io.done := true.B
+    programCounter.io.stop := true.B
+  }
 
-  // Branch condition evaluation
-  val beqCond = (regAData === regBData) // BEQ: rs1 == rs2
-  val bneCond = (regAData =/= regBData) // BNE: rs1 != rs2
-  val bltCond = (regAData.asSInt < regBData.asSInt) // BLT: rs1 < rs2 (signed)
-
-  // Determine which branch type based on funct3
-  val isBEQ = (funct3 === "b000".U)
-  val isBNE = (funct3 === "b001".U)
-  val isBLT = (funct3 === "b100".U)
-
-  val branchConditionMet =
-    (isBEQ && beqCond) ||
-      (isBNE && bneCond) ||
-      (isBLT && bltCond)
-
-  // Determine if we should take the branch or jump
-  val takeBranch = (controlUnit.io.branch && branchConditionMet) || isJump
-
-  // Select target address (branch vs jump)
-  val jumpAddress = Mux(isJump, jumpTarget, branchTarget)
-
-  // Connect to Program Counter
-  programCounter.io.jump := takeBranch
-  programCounter.io.programCounterJump := jumpAddress(
-    15,
-    0
-  ) // Take lower 16 bits
-
-  // Handle ECALL (done signal)
-  val isECALL = (opcode === "b1110011".U) && (funct3 === "b000".U)
-  io.done := isECALL
-  programCounter.io.stop := isECALL
-
-  // This signals are used by the tester for loading the program to the program memory, do not touch
+// dont touch
   programMemory.io.testerAddress := io.testerProgMemAddress
   io.testerProgMemDataRead := programMemory.io.testerDataRead
   programMemory.io.testerDataWrite := io.testerProgMemDataWrite
   programMemory.io.testerEnable := io.testerProgMemEnable
   programMemory.io.testerWriteEnable := io.testerProgMemWriteEnable
-  // This signals are used by the tester for loading and dumping the data memory content, do not touch
+
   dataMemory.io.testerAddress := io.testerDataMemAddress
   io.testerDataMemDataRead := dataMemory.io.testerDataRead
   dataMemory.io.testerDataWrite := io.testerDataMemDataWrite
   dataMemory.io.testerEnable := io.testerDataMemEnable
   dataMemory.io.testerWriteEnable := io.testerDataMemWriteEnable
-
 }

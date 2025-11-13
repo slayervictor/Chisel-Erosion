@@ -21,4 +21,3 @@ class ProgramCounter extends Module {
   io.programCounter := counterReg
 
 }
-

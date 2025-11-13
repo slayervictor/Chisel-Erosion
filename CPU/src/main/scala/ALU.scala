@@ -2,53 +2,29 @@ import chisel3._
 import chisel3.util._
 
 class ALU extends Module {
-  val io = IO(new Bundle {
-    val operandA = Input(UInt(32.W))
-    val operandB = Input(UInt(32.W))
-    val funct7   = Input(UInt(7.W))
-    val funct3   = Input(UInt(3.W))
-    val result   = Output(UInt(32.W))
-  })
+    val io = IO(new Bundle {
+        val aSel   = Input(UInt(16.W))
+        val bSel   = Input(UInt(16.W))
+        val func   = Input(UInt(3.W))
+        val result = Output(UInt(16.W))
+    })
 
-  // Default value
-  io.result := 0.U
+    val add    = io.aSel.asSInt + io.bSel.asSInt
+    val mult   = io.aSel.asSInt * io.bSel.asSInt
+    val or     = io.aSel.asSInt | io.bSel.asSInt
+    val and    = io.aSel.asSInt & io.bSel.asSInt
+    val not    = ~io.bSel.asSInt
+    val isZero = (io.aSel === 0.U)
 
-  switch(io.funct3) {
-    is("h0".U) {
-      when(io.funct7 === "h0".U) {
-        io.result := io.operandA + io.operandB // ADD
-      }.elsewhen(io.funct7 === "h1".U) {
-        io.result := io.operandA * io.operandB // MUL
-      }.otherwise {
-        io.result := io.operandA - io.operandB // SUB
-      }
-    }
-
-    is("h4".U) { // XOR
-      io.result := io.operandA ^ io.operandB
-    }
-
-    is("h6".U) { // OR
-      io.result := io.operandA | io.operandB
-    }
-
-    is("h1".U) { // SLL (Shift Left Logical)
-      io.result := io.operandA << io.operandB(4, 0) // Only lower 5 bits
-    }
-
-    is("h5".U) { // SRL or SRA (Shift Right)
-      when(io.funct7 === "h0".U) {
-        io.result := io.operandA >> io.operandB(4, 0) // SRL (Logical)
-      }.otherwise {
-        io.result := (io.operandA.asSInt >> io.operandB(
-          4,
-          0
-        )).asUInt // SRA (Arithmetic)
-      }
-    }
-    is("h7".U) { // AND
-      io.result := io.operandA & io.operandB
-    }
-  }
-
+    // MuxLookup or switch to select operation
+    io.result := MuxLookup(io.func, 0.U)(
+      Seq(
+        0.U -> add.asUInt,
+        1.U -> mult.asUInt,
+        2.U -> or.asUInt,
+        3.U -> and.asUInt,
+        4.U -> not.asUInt,
+        5.U -> isZero.asUInt
+      )
+    )
 }

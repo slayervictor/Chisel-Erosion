@@ -4,105 +4,80 @@ import org.scalatest.flatspec.AnyFlatSpec
 
 class ControlUnitTester extends AnyFlatSpec with ChiselScalatestTester {
 
-  behavior of "ControlUnit"
-
-  it should "set correct control signals for R-TYPE instructions" in {
+  "ControlUnit" should "decode opcodes and set control signals correctly" in {
     test(new ControlUnit) { c =>
-      c.io.opcode.poke("b0110011".U)
-      c.io.funct3.poke("b000".U)
-      c.io.funct7.poke("b0000000".U)
-      c.clock.step(1)
+      def makeInstr(
+          op: Int,
+          reg1: Int,
+          reg2: Int,
+          reg3: Int,
+          imm: Int
+      ): BigInt = {
+        ((BigInt(imm & 0xffff) << 16) |
+          (BigInt(reg3 & 0xf) << 12) |
+          (BigInt(reg2 & 0xf) << 8) |
+          (BigInt(reg1 & 0xf) << 4) |
+          BigInt(op & 0xf))
+      }
 
-      c.io.regWrite.expect(true.B)
-      c.io.aluSrc.expect(false.B)
-      c.io.memRead.expect(false.B)
-      c.io.memWrite.expect(false.B)
-      c.io.memToReg.expect(false.B)
-      c.io.branch.expect(false.B)
-    }
-  }
+      def checkOutputs(
+          instr: BigInt,
+          expectedOp: Int,
+          expectedSignals: (
+              Boolean,
+              Boolean,
+              Boolean,
+              Boolean,
+              Boolean,
+              Boolean,
+              Boolean,
+              Boolean
+          ),
+          reg1: Int,
+          reg2: Int,
+          reg3: Int,
+          imm: Int
+      ): Unit = {
+        c.io.instruction.poke(instr.U)
+        c.clock.step(1)
 
-  it should "set correct control signals for I-TYPE instructions" in {
-    test(new ControlUnit) { c =>
-      c.io.opcode.poke("b0010011".U)
-      c.io.funct3.poke("b010".U)
-      c.clock.step(1)
+        c.io.opcode.expect(expectedOp.U)
+        c.io.reg1.expect(reg1.U)
+        c.io.reg2.expect(reg2.U)
+        c.io.reg3.expect(reg3.U)
+        c.io.imm.expect(imm.U)
 
-      c.io.regWrite.expect(true.B)
-      c.io.aluSrc.expect(true.B)
-      c.io.memRead.expect(false.B)
-      c.io.memWrite.expect(false.B)
-      c.io.memToReg.expect(false.B)
-      c.io.branch.expect(false.B)
-    }
-  }
+        val (li, lb, sb, branch, add, addi, j, exit) = expectedSignals
+        c.io.li.expect(li.B)
+        c.io.lb.expect(lb.B)
+        c.io.sb.expect(sb.B)
+        c.io.branch.expect(branch.B)
+        c.io.add.expect(add.B)
+        c.io.addi.expect(addi.B)
+        c.io.j.expect(j.B)
+        c.io.exit.expect(exit.B)
+      }
 
-  it should "set correct control signals for LOAD instructions" in {
-    test(new ControlUnit) { c =>
-      c.io.opcode.poke("b0000011".U)
-      c.clock.step(1)
+      val reg1 = 1
+      val reg2 = 2
+      val reg3 = 3
+      val imm = 0xabcd
 
-      c.io.regWrite.expect(true.B)
-      c.io.memRead.expect(true.B)
-      c.io.memToReg.expect(true.B)
-      c.io.aluSrc.expect(true.B)
-      c.io.memWrite.expect(false.B)
-      c.io.branch.expect(false.B)
-    }
-  }
+      val tests = Seq(
+        (0x1, (false, false, false, false, true, false, false, false)),
+        (0x2, (false, false, false, false, false, true, false, false)),
+        (0x3, (true, false, false, false, false, false, false, false)),
+        (0x4, (false, true, false, false, false, false, false, false)),
+        (0x5, (false, false, true, false, false, false, false, false)),
+        (0x6, (false, false, false, true, false, false, false, false)),
+        (0x7, (false, false, false, false, false, false, true, false)),
+        (0x8, (false, false, false, false, false, false, false, true))
+      )
 
-  it should "set correct control signals for STORE instructions" in {
-    test(new ControlUnit) { c =>
-      c.io.opcode.poke("b0100011".U)
-      c.clock.step(1)
-
-      c.io.memWrite.expect(true.B)
-      c.io.aluSrc.expect(true.B)
-      c.io.regWrite.expect(false.B)
-      c.io.memRead.expect(false.B)
-      c.io.memToReg.expect(false.B)
-      c.io.branch.expect(false.B)
-    }
-  }
-
-  it should "set correct control signals for BRANCH instructions" in {
-    test(new ControlUnit) { c =>
-      c.io.opcode.poke("b1100011".U)
-      c.clock.step(1)
-
-      c.io.branch.expect(true.B)
-      c.io.regWrite.expect(false.B)
-      c.io.memRead.expect(false.B)
-      c.io.memWrite.expect(false.B)
-      c.io.memToReg.expect(false.B)
-    }
-  }
-
-  it should "set correct control signals for ECALL instructions" in {
-    test(new ControlUnit) { c =>
-      c.io.opcode.poke("b1110011".U)
-      c.io.funct3.poke("h0".U)
-      c.io.funct7.poke("h0".U)
-      c.clock.step(1)
-
-      c.io.regWrite.expect(false.B)
-      c.io.memRead.expect(false.B)
-      c.io.memWrite.expect(false.B)
-      c.io.branch.expect(false.B)
-    }
-  }
-
-  it should "set correct control signals for JAL instructions" in {
-    test(new ControlUnit) { c =>
-      c.io.opcode.poke("b1101111".U)
-      c.clock.step(1)
-
-      c.io.regWrite.expect(true.B)
-      c.io.aluSrc.expect(false.B)
-      c.io.memRead.expect(false.B)
-      c.io.memWrite.expect(false.B)
-      c.io.memToReg.expect(false.B)
-      c.io.branch.expect(false.B)
+      for ((opcode, signals) <- tests) {
+        val instr = makeInstr(opcode, reg1, reg2, reg3, imm)
+        checkOutputs(instr, opcode, signals, reg1, reg2, reg3, imm)
+      }
     }
   }
 }
