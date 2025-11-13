@@ -23,7 +23,7 @@ The Erosion program can be found in the `Erosion` directory, since the code is a
 The CPU Supports basic logical and arithmetic operations, but it is general purpose, so any software should run, assuming that the assembly is written with the limited scope in mind.
 
 ## Instruction Set
-| Opcode | Instruction | Description | Binary |
+| Decimal | Instruction | Description | Binary |
 |--------|-------------|-------------|--------|
 | 1 | ADD | R1 = R2 + R3 | b00001 |
 | 2 | SUB | R1 = R2 - R3 | b00010 |
