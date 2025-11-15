@@ -29,16 +29,16 @@ class ControlUnit extends Module {
   })
 
   val opcode = io.instruction(3, 0)
-  val regA = io.instruction(7, 4)
-  val regB = io.instruction(11, 8)
-  val regC = io.instruction(15, 12)
+  val reg1 = io.instruction(7, 4)
+  val reg2 = io.instruction(11, 8)
+  val reg3 = io.instruction(15, 12)
   val imm = io.instruction(31, 16)
 
   // Setting the values
   io.opcode := opcode
-  io.reg1 := regA
-  io.reg2 := regB
-  io.reg3 := regC
+  io.reg1 := reg1
+  io.reg2 := reg2
+  io.reg3 := reg3
   io.imm := imm
   io.nop := false.B
   io.add := false.B
